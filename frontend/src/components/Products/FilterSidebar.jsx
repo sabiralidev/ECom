@@ -1,8 +1,8 @@
 import React, { forwardRef, useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { X } from "lucide-react";
 
-const FilterSidebar = forwardRef(({ className }, ref) => {
-  const navigate = useNavigate();
+const FilterSidebar = forwardRef(({ className, onClose }, ref) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const categories = ["Top Wear", "Bottom Wear"];
@@ -41,7 +41,8 @@ const FilterSidebar = forwardRef(({ className }, ref) => {
   }, [searchParams]);
 
   const applyFilters = (nextFilters) => {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams);
+    ["category", "gender", "color", "size", "material", "brand", "minPrice", "maxPrice", "minRating", "availability", "page"].forEach((key) => params.delete(key));
 
     Object.entries(nextFilters).forEach(([key, value]) => {
       if (Array.isArray(value) && value.length > 0) {
@@ -50,9 +51,8 @@ const FilterSidebar = forwardRef(({ className }, ref) => {
         params.set(key, String(value));
       }
     });
-
     setSearchParams(params);
-    navigate(`?${params.toString()}`);
+    setSearchParams(params);
   };
 
   const onSingleSelect = (key, value) => {
@@ -95,12 +95,16 @@ const FilterSidebar = forwardRef(({ className }, ref) => {
       <div className="filter-sidebar-scroll sticky top-0 h-screen overflow-y-auto border-r border-[var(--line)] bg-[var(--surface)] px-4 pb-8 pt-4 pr-3 transition-all duration-300 sm:px-5">
         <div className="mb-5 flex items-center justify-between gap-3 border-b border-[var(--line)] pb-3">
           <h2 className="display-title text-[2.2rem] leading-none text-[var(--ink)]">Filters</h2>
-          <button
-            onClick={clearFilters}
-            className="border border-[var(--line)] bg-[var(--surface-elevated)] px-3 py-1 text-[0.65rem] font-medium uppercase tracking-[0.12em] text-[var(--ink-soft)] transition-colors hover:border-[var(--bronze)] hover:text-[var(--ink)]"
-          >
-            Clear
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="border border-[var(--line)] bg-[var(--surface-elevated)] px-3 py-1 text-[0.65rem] font-medium uppercase tracking-[0.12em] text-[var(--ink-soft)] transition-colors hover:border-[var(--bronze)] hover:text-[var(--ink)]"
+            >
+              Clear
+            </button>
+            {onClose && <button type="button" onClick={onClose} className="rounded-full p-2 text-[var(--ink-soft)] hover:bg-[var(--paper)] lg:hidden" aria-label="Close filters"><X size={18} /></button>}
+          </div>
         </div>
 
         <div className="mb-6">
