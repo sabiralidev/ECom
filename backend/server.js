@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
+const mongoose = require("mongoose");
 const path = require("path");
 const dotenv = require("dotenv");
 const { sanitizeRequest } = require("./Middleware/sanitizeRequest");
@@ -70,6 +71,13 @@ const dbConnect = require("./config/dbConnect");
 
 app.get("/", (req, res) => {
   res.status(200).json({ message: "API Run Sucessfully" });
+});
+app.get("/health", (_req, res) => {
+  const databaseConnected = mongoose.connection.readyState === 1;
+  return res.status(databaseConnected ? 200 : 503).json({
+    status: databaseConnected ? "ok" : "unavailable",
+    database: databaseConnected ? "connected" : "disconnected",
+  });
 });
 // API Routes
 // Users

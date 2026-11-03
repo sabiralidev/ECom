@@ -202,15 +202,18 @@ npm run dev
 Open:
 
 - Storefront: `http://localhost:5173`
-- Backend health check: `http://localhost:5100/`
+- Backend readiness check: `http://localhost:5100/health`
 
-Expected health response:
+When MongoDB is connected, the readiness endpoint returns:
 
 ```json
 {
-  "message": "API Run Sucessfully"
+  "status": "ok",
+  "database": "connected"
 }
 ```
+
+It returns HTTP `503` with `"status": "unavailable"` while MongoDB is disconnected. The existing `/` response is unchanged.
 
 ## Environment Variables
 
@@ -324,7 +327,8 @@ Protected endpoints require `Authorization: Bearer <token>`. Admin endpoints req
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| GET | `/` | Public | API health check |
+| GET | `/` | Public | Existing API status response |
+| GET | `/health` | Public | Readiness check; reports MongoDB connectivity |
 | POST | `/api/users/register` | Public | Body: `name`, `email`, `password` |
 | POST | `/api/users/login` | Public | Body: `email`, `password`; returns JWT |
 | GET | `/api/users/profile` | User | Return current profile |
