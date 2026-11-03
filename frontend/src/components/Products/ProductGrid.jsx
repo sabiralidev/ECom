@@ -9,7 +9,16 @@ import { toast } from "sonner";
 const fallbackProductImage = "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=80";
 
 const ProductSkeleton = () => (
-  <div className="animate-pulse"><div className="aspect-[3/4] bg-[#e6e0d7]" /><div className="mt-4 h-4 w-3/4 bg-[#e6e0d7]" /><div className="mt-2 h-3 w-1/3 bg-[#e6e0d7]" /></div>
+  <div aria-hidden="true" className="motion-safe:animate-pulse">
+    <div className="aspect-[3/4] bg-[#e6e0d7]" />
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0 flex-1">
+        <div className="mt-4 h-4 w-3/4 bg-[#e6e0d7]" />
+        <div className="mt-2 h-3 w-1/3 bg-[#e6e0d7]" />
+      </div>
+      <div className="mt-4 h-4 w-14 bg-[#e6e0d7]" />
+    </div>
+  </div>
 );
 const ProductGrid = ({ products, loading, error, onWishlistToggle }) => {
   const dispatch = useDispatch();
@@ -29,7 +38,17 @@ const ProductGrid = ({ products, loading, error, onWishlistToggle }) => {
       setPendingWishlist(null);
     }
   };
-  if (loading) return <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">{Array.from({ length: 8 }).map((_, index) => <ProductSkeleton key={index} />)}</div>;
+  if (loading) return (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-6"
+    >
+      <span className="sr-only">Loading products</span>
+      {Array.from({ length: 8 }).map((_, index) => <ProductSkeleton key={index} />)}
+    </div>
+  );
   if (error) return <div className="border border-[var(--line)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--error)]">{error}</div>;
   if (!Array.isArray(products) || products.length === 0) return <div className="border border-[var(--line)] bg-[var(--surface)] p-16 text-center"><p className="display-title text-3xl">Nothing here yet.</p><p className="mt-3 text-sm text-[var(--ink-soft)]">Try adjusting your filters or search.</p></div>;
   return (
