@@ -41,7 +41,7 @@ Requirements: Node.js 18+, MongoDB, and npm.
    ```dotenv
    PORT=5100
    HOST=localhost
-   MONGODB_URI=mongodb://127.0.0.1:27017/ecom
+   MONGODB_URI=mongodb://127.0.0.1:27017/ecom?replicaSet=rs0
    JWT_SECRET=replace_with_at_least_32_random_characters
    FRONTEND_URL=http://localhost:5173
    CLOUDINARY_CLOUD_NAME=replace_with_cloudinary_cloud_name
@@ -54,6 +54,9 @@ Requirements: Node.js 18+, MongoDB, and npm.
    `MONGODB_URI` and `JWT_SECRET` are required for the API. Cloudinary variables are required by image upload, and Stripe variables are required only when using Stripe payments. Keep real secrets out of Git.
 
    `FRONTEND_URL` also controls the allowed production CORS origin. In development, localhost Vite origins are allowed.
+
+   Checkout finalization and inventory adjustments use MongoDB transactions, so the database must support replica sets. For local development, start MongoDB with `--replSet rs0`, initialize it once with `rs.initiate()` in `mongosh`, and add `?replicaSet=rs0` to `MONGODB_URI`. MongoDB Atlas URIs support transactions.
+   The backend checks transaction support at startup and exits with an explicit error if the database is standalone.
 
 3. Start the development server:
 

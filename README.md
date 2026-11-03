@@ -169,8 +169,8 @@ Create or update `backend/.env` using the template in the [Environment Variables
 At minimum, configure:
 
 ```dotenv
-MONGODB_URI=mongodb://127.0.0.1:27017/ecom
-JWT_SECRET=replace_with_a_long_random_secret
+MONGODB_URI=mongodb://127.0.0.1:27017/ecom?replicaSet=rs0
+JWT_SECRET=replace_with_at_least_32_random_characters
 ```
 
 ### 3. Configure the frontend
@@ -223,7 +223,7 @@ It returns HTTP `503` with `"status": "unavailable"` while MongoDB is disconnect
 |---|---:|---|---|
 | `PORT` | No | HTTP port. Defaults to `5100`. | `5100` |
 | `HOST` | No | Bind host. Defaults to `localhost`. | `localhost` |
-| `MONGODB_URI` | Yes | MongoDB local or Atlas connection string. | `mongodb://127.0.0.1:27017/ecom` |
+| `MONGODB_URI` | Yes | MongoDB replica-set or Atlas connection string (transactions require replica-set support). | `mongodb://127.0.0.1:27017/ecom?replicaSet=rs0` |
 | `JWT_SECRET` | Yes | Secret used to sign and verify seven-day JWTs; at least 32 characters. | Long random string |
 | `FRONTEND_URL` | No | Stripe redirect origin and allowed CORS origin(s), comma-separated if needed. | `http://localhost:5173` |
 | `CLOUDINARY_CLOUD_NAME` | Uploads | Cloudinary cloud name. | `your_cloud_name` |
@@ -233,6 +233,9 @@ It returns HTTP `503` with `"status": "unavailable"` while MongoDB is disconnect
 | `STRIPE_WEBHOOK_SECRET` | Webhooks | Stripe endpoint signing secret. | `whsec_...` |
 
 Copy [backend/.env.example](./backend/.env.example) to `backend/.env` and replace placeholders. Never commit real environment files.
+
+MongoDB transactions used by checkout and inventory operations require a replica set. For local MongoDB, start it with `--replSet rs0`, initialize it once with `rs.initiate()` in `mongosh`, and use the replica-set URI shown above. MongoDB Atlas connection strings provide replica-set support.
+The backend checks this capability during startup and exits with an explicit error if the database is standalone.
 
 ### Frontend: `frontend/.env`
 

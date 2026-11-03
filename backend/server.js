@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const dotenv = require("dotenv");
 const { sanitizeRequest } = require("./Middleware/sanitizeRequest");
+const { assertTransactionSupport } = require("./config/assertTransactionSupport");
 
 dotenv.config({ path: path.resolve(__dirname, ".env") });
 
@@ -135,12 +136,18 @@ const startServer = async () => {
     if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
       throw new Error("JWT_SECRET must be set to at least 32 characters");
     }
-    await dbConnect();
+    const connection = await dbConnect();
+    await assertTransactionSupport(connection);
     app.listen(port, host, () => {
       console.log(`Server is running at http://${host}:${port}`);
     });
   } catch (error) {
     console.error("Server startup failed:", error.message);
+    try {
+      await mongoose.disconnect();
+    } catch (disconnectError) {
+      console.error("Database cleanup after startup failure failed:", disconnectError.message);
+    }
     process.exitCode = 1;
   }
 };
