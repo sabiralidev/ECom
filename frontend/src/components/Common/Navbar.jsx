@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
   HiOutlineUser,
   HiOutlineShoppingBag,
@@ -13,6 +13,7 @@ import { IoMdClose } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { clearCart, fetchCart } from "../../redux/slices/CartSlice";
 import { logout } from "../../redux/slices/authSlices";
+import { Home as HomeIcon, Store, UserRound } from "lucide-react";
 
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -181,7 +182,7 @@ const Navbar = () => {
             )}
           </div>
 
-          <button onClick={toggleNavDrawer} className="md:hidden" aria-label="Open navigation menu">
+          <button onClick={toggleNavDrawer} className="md:hidden" aria-label="Open navigation menu" aria-expanded={navDrawerOpen}>
             <HiBars3BottomRight className="h-6 w-6 text-[var(--ink-soft)] transition-colors duration-300 hover:text-[var(--bronze-deep)]" />
           </button>
         </div>
@@ -262,6 +263,21 @@ const Navbar = () => {
           className="fixed inset-0 z-40 bg-black/30 md:hidden"
         />
       )}
+
+      <nav aria-label="Quick navigation" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-[var(--line)] bg-[var(--surface-elevated)]/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_28px_rgba(20,18,14,0.08)] backdrop-blur md:hidden">
+        <NavLink to="/" aria-label="Home" className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center gap-1 text-[0.58rem] font-semibold uppercase tracking-wider ${isActive ? "text-[var(--bronze-deep)]" : "text-[var(--ink-soft)]"}`}>
+          <HomeIcon size={18} aria-hidden="true" />Home
+        </NavLink>
+        <NavLink to="/collections" aria-label="Shop" className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center gap-1 text-[0.58rem] font-semibold uppercase tracking-wider ${isActive ? "text-[var(--bronze-deep)]" : "text-[var(--ink-soft)]"}`}>
+          <Store size={18} aria-hidden="true" />Shop
+        </NavLink>
+        <NavLink to={user ? "/profile" : "/login"} aria-label="Account" className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center gap-1 text-[0.58rem] font-semibold uppercase tracking-wider ${isActive ? "text-[var(--bronze-deep)]" : "text-[var(--ink-soft)]"}`}>
+          <UserRound size={18} aria-hidden="true" />Account
+        </NavLink>
+        <button type="button" onClick={toggleCartDrawer} aria-label={`Open bag, ${cartItemCount} items`} className="relative flex min-h-14 flex-col items-center justify-center gap-1 text-[0.58rem] font-semibold uppercase tracking-wider text-[var(--ink-soft)]">
+          <span className="relative"><HiOutlineShoppingBag className="h-[18px] w-[18px]" /><span className="absolute -right-2 -top-1 min-w-4 rounded-full bg-[var(--graphite)] px-1 text-center text-[0.55rem] text-white">{cartItemCount}</span></span>Bag
+        </button>
+      </nav>
     </>
   );
 };
