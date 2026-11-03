@@ -356,12 +356,14 @@ Protected endpoints require `Authorization: Bearer <token>`. Admin endpoints req
 | DELETE | `/api/products/:id` | Admin | Delete a product |
 | GET | `/api/products/all-products` | Admin | List all products, including unpublished products |
 
-Supported product query parameters include `collection`, `category`, `sizes`, `colors`, `gender`, `minPrice`, `maxPrice`, `sortBy`, `search`, `material`, `brand`, `limit`, `minRating`, and `availability`.
+Supported product query parameters include `collection`, `category`, `sizes`, `colors`, `gender`, `minPrice`, `maxPrice`, `sortBy`, `search`, `material`, `brand`, `page`, `limit`, `minRating`, and `availability`.
+
+The product catalogue, admin product/order/user lists, and current user's order history support opt-in pagination. Pass `page` and optional `limit` (default `25`, maximum `100`). Responses remain arrays; metadata is returned in `X-Total-Count`, `X-Page`, `X-Limit`, and `X-Total-Pages` headers. The product endpoint requires `page` to activate pagination; its existing `limit`-only behavior is unchanged. The CORS policy exposes these headers to the frontend.
 
 Example:
 
 ```http
-GET /api/products?category=Top%20Wear&colors=Black,White&minPrice=1000&maxPrice=10000&sortBy=priceAsc
+GET /api/products?category=Top%20Wear&colors=Black,White&minPrice=1000&maxPrice=10000&sortBy=priceAsc&page=2&limit=10
 ```
 
 ### Cart

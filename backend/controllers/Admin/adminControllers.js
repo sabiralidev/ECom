@@ -1,4 +1,5 @@
 const User = require("../../models/user");
+const { parsePagination, paginateQuery } = require("../../utils/pagination");
 
 const safeUser = (user) => {
     const result = user.toObject();
@@ -9,9 +10,18 @@ const safeUser = (user) => {
 // Get All User By Admin auth/admin/users
 
 const getAdminUsers = async (req, res, next) => {
+    const pagination = parsePagination(req.query);
+    if (pagination?.error) {
+        return res.status(400).json({ message: pagination.error });
+    }
+
     try {
-        const users = await User.find({}).select("-password").sort({ createdAt: -1 }).lean();
-        res.json(users);
+        const filter = {};
+        const userQuery = User.find(filter).select("-password").sort({ createdAt: -1 }).lean();
+        const users = pagination
+            ? await paginateQuery({ model: User, filter, query: userQuery, pagination, res })
+            : await userQuery;
+        return res.json(users);
     } catch (error) {
         return res.status(500).json({
             message: "Server error while loading users",

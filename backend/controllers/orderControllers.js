@@ -1,13 +1,21 @@
 const Order = require("../models/order");
+const { parsePagination, paginateQuery } = require("../utils/pagination");
 
 // Get /api/order/my-orders
 
 const getMyOrder = async (req,res,next)=>{
+    const filter = { user: req.user._id };
+    const pagination = parsePagination(req.query);
+    if (pagination?.error) {
+        return res.status(400).json({ message: pagination.error });
+    }
+
     try {
-        const orders = await Order.find({user: req.user._id}).sort({
-            createdAt : -1,
-        });
-        res.json(orders);
+        const orderQuery = Order.find(filter).sort({ createdAt: -1 });
+        const orders = pagination
+            ? await paginateQuery({ model: Order, filter, query: orderQuery, pagination, res })
+            : await orderQuery;
+        return res.json(orders);
     } catch (error) {
          return res.status(500).json({
             message: "Server error while updating cart",

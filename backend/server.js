@@ -52,6 +52,7 @@ app.use(cors({
   },
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
   allowedHeaders: ["Authorization", "Content-Type", "Stripe-Signature"],
+  exposedHeaders: ["X-Total-Count", "X-Page", "X-Limit", "X-Total-Pages"],
   credentials: true,
 }));
 
