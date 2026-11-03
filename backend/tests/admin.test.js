@@ -9,8 +9,15 @@ const Order = require("../models/order");
 const Cart = require("../models/Cart");
 const { auth, checkRole } = require("../Middleware/authMiddleware");
 const { adjustInventory } = require("../utils/inventory");
-const { checkoutPost } = require("../controllers/checkoutControllers");
-const { ademinOrderUpdate } = require("../controllers/Admin/adminOrderControllers");
+const {
+  checkoutPost,
+  releaseCheckoutStock,
+  reserveCheckoutStock,
+} = require("../controllers/checkoutControllers");
+const {
+  adminDeleteOrder,
+  ademinOrderUpdate,
+} = require("../controllers/Admin/adminOrderControllers");
 
 const originalFindById = User.findById;
 const originalUpdateOne = Product.updateOne;
@@ -22,8 +29,13 @@ const originalOrderCreate = Order.create;
 const originalOrderDeleteOne = Order.deleteOne;
 const originalOrderFindById = Order.findById;
 const originalOrderFindOneAndUpdate = Order.findOneAndUpdate;
+const originalStartSession = mongoose.startSession;
 const originalCartFindOneAndDelete = Cart.findOneAndDelete;
 const jwtSecret = "admin-test-secret";
+const transactionSession = {
+  withTransaction: async (operation) => operation(transactionSession),
+  endSession: async () => {},
+};
 process.env.JWT_SECRET = jwtSecret;
 
 const response = () => ({
@@ -49,6 +61,7 @@ after(() => {
   Order.deleteOne = originalOrderDeleteOne;
   Order.findById = originalOrderFindById;
   Order.findOneAndUpdate = originalOrderFindOneAndUpdate;
+  mongoose.startSession = originalStartSession;
   Cart.findOneAndDelete = originalCartFindOneAndDelete;
 });
 
@@ -215,8 +228,10 @@ test("COD checkout uses server product prices and deducts live inventory", async
   let remaining = product.countInStock;
   let storedCheckout;
   let orderData;
+  mongoose.startSession = async () => transactionSession;
   Product.find = async () => [product];
-  Product.updateOne = async (filter, update) => {
+  Product.updateOne = async (filter, update, options) => {
+    assert.equal(options.session, transactionSession);
     if (
       String(filter._id) !== productId ||
       (filter.isPublished !== undefined && !product.isPublished) ||
@@ -231,11 +246,15 @@ test("COD checkout uses server product prices and deducts live inventory", async
       _id: checkoutId,
       isFinalized: false,
       stockReservationState: "none",
-      save: async function save() { return this; },
+      save: async function save(options) {
+        assert.equal(options.session, transactionSession);
+        return this;
+      },
     };
     return storedCheckout;
   };
-  Checkout.findOneAndUpdate = async (_filter, update) => {
+  Checkout.findOneAndUpdate = async (_filter, update, options) => {
+    assert.equal(options.session, transactionSession);
     Object.assign(storedCheckout, update.$set);
     return storedCheckout;
   };
@@ -243,12 +262,16 @@ test("COD checkout uses server product prices and deducts live inventory", async
     Object.assign(storedCheckout, update.$set);
     return { matchedCount: 1 };
   };
-  Order.create = async (data) => {
-    orderData = data;
-    return { ...data, _id: new mongoose.Types.ObjectId() };
+  Order.create = async (documents, options) => {
+    assert.equal(options.session, transactionSession);
+    orderData = documents[0];
+    return [{ ...orderData, _id: new mongoose.Types.ObjectId() }];
   };
   Order.deleteOne = async () => ({ deletedCount: 1 });
-  Cart.findOneAndDelete = async () => null;
+  Cart.findOneAndDelete = async (_filter, options) => {
+    assert.equal(options.session, transactionSession);
+    return null;
+  };
 
   const res = response();
   await checkoutPost({
@@ -277,6 +300,43 @@ test("COD checkout uses server product prices and deducts live inventory", async
   assert.equal(remaining, 2);
 });
 
+test("Stripe stock reservation and release update checkout and products in transactions", async () => {
+  const productId = new mongoose.Types.ObjectId().toString();
+  const checkout = {
+    _id: new mongoose.Types.ObjectId(),
+    checkoutItem: [{ productId, quantity: 1 }],
+    isFinalized: false,
+    stockReservationState: "none",
+    save: async function save(options) {
+      assert.equal(options.session, transactionSession);
+      return this;
+    },
+  };
+  let stock = 3;
+  mongoose.startSession = async () => transactionSession;
+  Checkout.findOneAndUpdate = async (_filter, update, options) => {
+    assert.equal(options.session, transactionSession);
+    Object.assign(checkout, update.$set);
+    return checkout;
+  };
+  Product.updateOne = async (filter, update, options) => {
+    assert.equal(options.session, transactionSession);
+    if (filter.countInStock?.$gte !== undefined && stock < filter.countInStock.$gte) {
+      return { matchedCount: 0 };
+    }
+    stock += update.$inc.countInStock;
+    return { matchedCount: 1 };
+  };
+
+  await reserveCheckoutStock(checkout);
+  assert.equal(checkout.stockReservationState, "reserved");
+  assert.equal(stock, 2);
+
+  assert.equal(await releaseCheckoutStock(checkout._id), true);
+  assert.equal(checkout.stockReservationState, "none");
+  assert.equal(stock, 3);
+});
+
 test("cancelling a tracked order restores stock once and cancellation is terminal", async () => {
   const productId = new mongoose.Types.ObjectId().toString();
   const orderId = new mongoose.Types.ObjectId();
@@ -289,13 +349,16 @@ test("cancelling a tracked order restores stock once and cancellation is termina
     orderItem: [{ productId, quantity: 2 }],
     populate: async function populate() { return this; },
   };
-  Product.updateOne = async (filter, update) => {
+  mongoose.startSession = async () => transactionSession;
+  Product.updateOne = async (filter, update, options) => {
+    assert.equal(options.session, transactionSession);
     if (String(filter._id) !== productId) return { matchedCount: 0 };
     remaining += update.$inc.countInStock;
     return { matchedCount: 1 };
   };
   Order.findById = async () => order;
-  Order.findOneAndUpdate = async (_filter, update) => {
+  Order.findOneAndUpdate = async (_filter, update, options) => {
+    assert.equal(options.session, transactionSession);
     Object.assign(order, update.$set);
     if (update.$unset) order.deliveredAt = undefined;
     return order;
@@ -316,6 +379,34 @@ test("cancelling a tracked order restores stock once and cancellation is termina
   await ademinOrderUpdate({ params: { id: String(orderId) }, body: { status: "Processing" } }, reopenResponse);
   assert.equal(reopenResponse.statusCode, 409);
   assert.equal(remaining, 4);
+});
+
+test("admin order deletion and stock restoration share a transaction", async () => {
+  const productId = new mongoose.Types.ObjectId().toString();
+  const order = {
+    _id: new mongoose.Types.ObjectId(),
+    inventoryAdjusted: true,
+    orderItem: [{ productId, quantity: 2 }],
+  };
+  let stock = 2;
+  mongoose.startSession = async () => transactionSession;
+  Order.findById = async () => order;
+  Product.updateOne = async (filter, update, options) => {
+    assert.equal(options.session, transactionSession);
+    stock += update.$inc.countInStock;
+    return { matchedCount: 1 };
+  };
+  Order.deleteOne = async (filter, options) => {
+    assert.equal(options.session, transactionSession);
+    assert.equal(String(filter._id), String(order._id));
+    return { deletedCount: 1 };
+  };
+
+  const res = response();
+  await adminDeleteOrder({ params: { id: String(order._id) } }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(stock, 4);
 });
 
 test("authentication loads the current database user rather than trusting JWT role", async () => {

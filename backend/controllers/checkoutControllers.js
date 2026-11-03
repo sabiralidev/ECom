@@ -4,6 +4,7 @@ const Cart = require("../models/Cart");
 const Product = require("../models/products");
 const mongoose = require("mongoose");
 const { adjustInventory } = require("../utils/inventory");
+const { withMongoTransaction } = require("../utils/withMongoTransaction");
 const Stripe = require("stripe");
 
 const defaultFrontendUrl = process.env.NODE_ENV === "production"
@@ -105,28 +106,25 @@ const createOrderFromCheckout = async (
         return null;
     }
 
-    const claimedCheckout = await Checkout.findOneAndUpdate(
-        { _id: checkout._id, isFinalized: { $ne: true } },
-        { $set: { isFinalized: true, finalizedAt: new Date() } },
-        { new: true }
-    );
-    if (!claimedCheckout) {
-        return null;
-    }
+    return withMongoTransaction(async (session) => {
+        const claimedCheckout = await Checkout.findOneAndUpdate(
+            { _id: checkout._id, isFinalized: { $ne: true } },
+            { $set: { isFinalized: true, finalizedAt: new Date() } },
+            { new: true, session }
+        );
+        if (!claimedCheckout) {
+            return null;
+        }
 
-    const hadStockReservation = claimedCheckout.stockReservationState === "reserved";
-    let createdOrder;
-    let inventoryDeductedHere = false;
-    try {
+        const hadStockReservation = claimedCheckout.stockReservationState === "reserved";
         if (!hadStockReservation) {
             if (claimedCheckout.stockReservationState !== "none") {
                 throw Object.assign(new Error("Stock reservation is already being processed"), { statusCode: 409 });
             }
-            await adjustInventory(claimedCheckout.checkoutItem, -1);
-            inventoryDeductedHere = true;
+            await adjustInventory(claimedCheckout.checkoutItem, -1, { session });
         }
 
-        createdOrder = await Order.create({
+        const [createdOrder] = await Order.create([{
             user: claimedCheckout.user,
             orderItem: claimedCheckout.checkoutItem,
             shippingAddress: claimedCheckout.shippingAddress,
@@ -138,96 +136,57 @@ const createOrderFromCheckout = async (
             paymentStatus,
             status: "Processing",
             inventoryAdjusted: true,
-        });
+        }], { session });
 
         claimedCheckout.isPaid = isPaid;
         claimedCheckout.paymentStatus = paymentStatus;
         claimedCheckout.paymentDetails = paymentDetails || claimedCheckout.paymentDetails;
         claimedCheckout.paidAt = isPaid ? paidAt || new Date() : claimedCheckout.paidAt;
         claimedCheckout.stockReservationState = "none";
-        await claimedCheckout.save();
-        await Cart.findOneAndDelete({ user: claimedCheckout.user });
+        await claimedCheckout.save({ session });
+        await Cart.findOneAndDelete({ user: claimedCheckout.user }, { session });
         return createdOrder;
-    } catch (error) {
-        if (createdOrder) {
-            await Order.deleteOne({ _id: createdOrder._id });
-        }
-        if (inventoryDeductedHere) {
-            await adjustInventory(claimedCheckout.checkoutItem, 1);
-        }
-        await Checkout.updateOne(
-            { _id: claimedCheckout._id, isFinalized: true },
-            {
-                $set: {
-                    isFinalized: false,
-                    finalizedAt: null,
-                    stockReservationState: hadStockReservation ? "reserved" : "none",
-                },
-            }
-        );
-        throw error;
-    }
+    });
 };
 
 const reserveCheckoutStock = async (checkout) => {
-    const claimedCheckout = await Checkout.findOneAndUpdate(
-        {
-            _id: checkout._id,
-            isFinalized: { $ne: true },
-            stockReservationState: "none",
-        },
-        { $set: { stockReservationState: "reserving" } },
-        { new: true }
-    );
-    if (!claimedCheckout) {
-        throw Object.assign(new Error("Stock is already reserved or being processed for this checkout"), { statusCode: 409 });
-    }
-
-    let inventoryReserved = false;
-    try {
-        await adjustInventory(claimedCheckout.checkoutItem, -1);
-        inventoryReserved = true;
-        claimedCheckout.stockReservationState = "reserved";
-        await claimedCheckout.save();
-    } catch (error) {
-        if (inventoryReserved) {
-            await adjustInventory(claimedCheckout.checkoutItem, 1);
-        }
-        await Checkout.updateOne(
-            { _id: claimedCheckout._id, stockReservationState: "reserving" },
-            { $set: { stockReservationState: "none" } }
+    return withMongoTransaction(async (session) => {
+        const claimedCheckout = await Checkout.findOneAndUpdate(
+            {
+                _id: checkout._id,
+                isFinalized: { $ne: true },
+                stockReservationState: "none",
+            },
+            { $set: { stockReservationState: "reserving" } },
+            { new: true, session }
         );
-        throw error;
-    }
+        if (!claimedCheckout) {
+            throw Object.assign(new Error("Stock is already reserved or being processed for this checkout"), { statusCode: 409 });
+        }
+
+        await adjustInventory(claimedCheckout.checkoutItem, -1, { session });
+        claimedCheckout.stockReservationState = "reserved";
+        await claimedCheckout.save({ session });
+        return claimedCheckout;
+    });
 };
 
 const releaseCheckoutStock = async (checkoutId) => {
-    const claimedCheckout = await Checkout.findOneAndUpdate(
-        { _id: checkoutId, stockReservationState: "reserved" },
-        { $set: { stockReservationState: "releasing" } },
-        { new: true }
-    );
-    if (!claimedCheckout) {
-        return false;
-    }
-
-    let inventoryReleased = false;
-    try {
-        await adjustInventory(claimedCheckout.checkoutItem, 1);
-        inventoryReleased = true;
-        claimedCheckout.stockReservationState = "none";
-        await claimedCheckout.save();
-        return true;
-    } catch (error) {
-        if (inventoryReleased) {
-            await adjustInventory(claimedCheckout.checkoutItem, -1);
-        }
-        await Checkout.updateOne(
-            { _id: claimedCheckout._id, stockReservationState: "releasing" },
-            { $set: { stockReservationState: "reserved" } }
+    return withMongoTransaction(async (session) => {
+        const claimedCheckout = await Checkout.findOneAndUpdate(
+            { _id: checkoutId, stockReservationState: "reserved" },
+            { $set: { stockReservationState: "releasing" } },
+            { new: true, session }
         );
-        throw error;
-    }
+        if (!claimedCheckout) {
+            return false;
+        }
+
+        await adjustInventory(claimedCheckout.checkoutItem, 1, { session });
+        claimedCheckout.stockReservationState = "none";
+        await claimedCheckout.save({ session });
+        return true;
+    });
 };
 
 // Post api/checkout/checkout
@@ -639,4 +598,6 @@ module.exports = {
     checkoutWebhook,
     checkoutPay,
     checkoutFinalize,
+    reserveCheckoutStock,
+    releaseCheckoutStock,
 };

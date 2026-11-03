@@ -24,7 +24,7 @@ const getQuantities = (items) => {
     return [...quantities].map(([productId, quantity]) => ({ productId, quantity }));
 };
 
-const adjustInventory = async (items, direction) => {
+const adjustInventory = async (items, direction, { session } = {}) => {
     if (direction !== -1 && direction !== 1) {
         throw new Error("Inventory adjustment direction must be -1 or 1");
     }
@@ -38,9 +38,11 @@ const adjustInventory = async (items, direction) => {
                 filter.isPublished = true;
                 filter.countInStock = { $gte: adjustment.quantity };
             }
-            const result = await Product.updateOne(filter, {
-                $inc: { countInStock: direction * adjustment.quantity },
-            });
+            const result = await Product.updateOne(
+                filter,
+                { $inc: { countInStock: direction * adjustment.quantity } },
+                session ? { session } : {}
+            );
             if (result.matchedCount !== 1) {
                 if (direction === 1) {
                     continue;
@@ -52,12 +54,17 @@ const adjustInventory = async (items, direction) => {
             applied.push(adjustment);
         }
     } catch (error) {
+        if (session) {
+            throw error;
+        }
+
         const rollbackFailures = [];
         for (const adjustment of applied.reverse()) {
             try {
                 const rollbackResult = await Product.updateOne(
                     { _id: adjustment.productId },
-                    { $inc: { countInStock: -direction * adjustment.quantity } }
+                    { $inc: { countInStock: -direction * adjustment.quantity } },
+                    {}
                 );
                 if (rollbackResult.matchedCount !== 1) {
                     rollbackFailures.push(adjustment.productId);
