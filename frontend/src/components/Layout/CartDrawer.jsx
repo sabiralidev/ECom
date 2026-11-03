@@ -12,6 +12,9 @@ const CartDrawer = ({ drawerOpen, toggleCartDrawer }) => {
   const itemCount = Array.isArray(cart?.products)
     ? cart.products.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
     : 0;
+  const freeShippingThreshold = 10000;
+  const freeShippingProgress = Math.min(100, (cartTotal / freeShippingThreshold) * 100);
+  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - cartTotal);
 
   const handleCheckout = () => {
     if (itemCount === 0) {
@@ -68,6 +71,16 @@ const CartDrawer = ({ drawerOpen, toggleCartDrawer }) => {
         </div>
 
         <div className="sticky bottom-0 border-t border-[var(--line)] bg-[var(--surface)] px-6 py-5">
+          <div className="mb-4" aria-live="polite">
+            <p className="mb-2 text-xs text-[var(--ink-soft)]">
+              {remainingForFreeShipping > 0
+                ? `Add Rs ${remainingForFreeShipping.toLocaleString()} for complimentary delivery`
+                : "Complimentary delivery unlocked"}
+            </p>
+            <div className="h-1.5 overflow-hidden rounded-full bg-[var(--line)]" role="progressbar" aria-label="Free delivery progress" aria-valuemin={0} aria-valuemax={freeShippingThreshold} aria-valuenow={Math.min(freeShippingThreshold, cartTotal)}>
+              <div className="h-full bg-[var(--bronze)] transition-[width] duration-300" style={{ width: `${freeShippingProgress}%` }} />
+            </div>
+          </div>
           <div className="mb-3 flex items-center justify-between text-sm text-[var(--ink-soft)]">
             <span>Subtotal ({itemCount} items)</span>
             <span className="font-semibold">Rs {cartTotal.toLocaleString()}</span>
