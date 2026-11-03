@@ -7,16 +7,36 @@ import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { fetchProductsByFilters } from "../redux/slices/ProductSlice";
 
+const catalogueFilterKeys = [
+  "collection",
+  "category",
+  "gender",
+  "size",
+  "color",
+  "material",
+  "brand",
+  "minPrice",
+  "maxPrice",
+  "minRating",
+  "availability",
+  "search",
+];
+
 const CollectionPage = () => {
   const dispatch = useDispatch();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { products, loading, error } = useSelector((state) => state.product);
   const sidebarRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const activeFilterCount = [...searchParams.keys()].filter((key) => key !== "sortBy" && searchParams.get(key)).length;
+  const activeFilterCount = catalogueFilterKeys.filter((key) => searchParams.get(key)).length;
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+  const clearCatalogueFilters = () => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    catalogueFilterKeys.forEach((key) => nextSearchParams.delete(key));
+    setSearchParams(nextSearchParams);
   };
   const loadProducts = useCallback(() => {
     const params = Object.fromEntries([...searchParams]);
@@ -86,7 +106,13 @@ const CollectionPage = () => {
           </div>
 
           <SortOptions />
-          <ProductGrid products={products} loading={loading} error={error} onRetry={loadProducts} />
+          <ProductGrid
+            products={products}
+            loading={loading}
+            error={error}
+            onRetry={loadProducts}
+            onClearFilters={activeFilterCount > 0 ? clearCatalogueFilters : undefined}
+          />
         </div>
       </div>
     </div>
