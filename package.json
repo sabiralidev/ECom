@@ -1,0 +1,12 @@
+{
+  "name": "ec-studio-store",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "server": "npm --prefix backend start",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "test": "npm --prefix backend test",
+    "seed": "npm --prefix backend run seed"
+  }
+}
