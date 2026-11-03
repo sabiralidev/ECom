@@ -460,6 +460,8 @@ Roles are `customer` and `admin`.
 
 `name`, `description`, `price`, `discountPrice`, `countInStock` (stock quantity), `sku`, `category`, `brand`, `sizes`, `colors`, `collections`, `material`, `gender`, `images`, feature/publication flags, ratings, tags, owner, and timestamps.
 
+Catalogue indexes cover published products by category/collection, price and rating sorting, and newest-first retrieval; admin product lists are indexed by creation date. Catalogue search currently uses case-insensitive regular expressions, so a MongoDB text index would not accelerate it without changing search semantics.
+
 ### Cart
 
 Optional `user` or `guestId`, product line items with product/variant information, `totalPrice`, and timestamps. A sparse unique index keeps one cart per user or guest identity.
@@ -471,6 +473,7 @@ User, checkout items, shipping address, payment method, total price, payment sta
 ### Order
 
 User, order items, shipping address, payment method/status, total price, paid state, delivery state, order status, and timestamps.
+Orders are indexed for newest-first admin lists and each user's order history. User records are indexed for newest-first admin lists.
 
 ### Subscriber
 

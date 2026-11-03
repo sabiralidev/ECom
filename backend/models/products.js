@@ -121,4 +121,11 @@ const productScheme = new mongoose.Schema({
     { timestamps: true },
 );
 
+productScheme.index({ createdAt: -1 });
+productScheme.index({ isPublished: 1, createdAt: -1 });
+productScheme.index({ isPublished: 1, category: 1, createdAt: -1 });
+productScheme.index({ isPublished: 1, collections: 1, createdAt: -1 });
+productScheme.index({ isPublished: 1, price: 1 });
+productScheme.index({ isPublished: 1, rating: -1, createdAt: -1 });
+
 module.exports = mongoose.model("Product", productScheme);
