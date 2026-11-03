@@ -364,6 +364,24 @@ a:focus-visible {
     gap: 1.5rem 1.2rem;
   }
 
+  .catalogue-product-image {
+    transition: opacity 700ms ease, transform 700ms ease;
+  }
+
+  .catalogue-product-image-secondary {
+    opacity: 0;
+  }
+
+  .catalogue-product-card.has-alternate-image:not([data-alternate-image-failed]):hover .catalogue-product-image-primary,
+  .catalogue-product-card.has-alternate-image:not([data-alternate-image-failed]):focus-within .catalogue-product-image-primary {
+    opacity: 0;
+  }
+
+  .catalogue-product-card.has-alternate-image:not([data-alternate-image-failed]):hover .catalogue-product-image-secondary,
+  .catalogue-product-card.has-alternate-image:not([data-alternate-image-failed]):focus-within .catalogue-product-image-secondary {
+    opacity: 1;
+  }
+
   .visual-break {
     position: relative;
     min-height: 540px;
