@@ -9,10 +9,12 @@ const UserLayout = () => {
   return (
     <div className="storefront-shell">
       <Header />
-      <main className="pt-[5.7rem] md:pt-[7.1rem]">
+      <main className="pb-16 pt-[5.7rem] md:pb-0 md:pt-[7.1rem]">
         <Outlet />
       </main>
-      <Footer showNewsletter={location.pathname !== "/"} />
+      <div className="pb-16 md:pb-0">
+        <Footer showNewsletter={location.pathname !== "/"} />
+      </div>
     </div>
   );
 };
