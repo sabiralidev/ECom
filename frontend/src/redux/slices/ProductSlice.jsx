@@ -23,6 +23,7 @@ export const fetchProductsByFilters = createAsyncThunk(
     material,
     brand,
     limit,
+    page,
     minRating,
     availability,
   }) => {
@@ -39,13 +40,22 @@ export const fetchProductsByFilters = createAsyncThunk(
     if (material) query.append("material", material);
     if (brand) query.append("brand", brand);
     if (limit) query.append("limit", limit);
+    if (page) query.append("page", page);
     if (minRating) query.append("minRating", minRating);
     if (availability) query.append("availability", availability);
 
     const response = await axios.get(
       `${import.meta.env.VITE_BACKEND_URL}/api/products?${query.toString()}`
     );
-    return response.data;
+    return {
+      products: response.data,
+      pagination: {
+        page: Number(response.headers["x-page"] || page || 1),
+        limit: Number(response.headers["x-limit"] || limit || response.data.length || 12),
+        total: Number(response.headers["x-total-count"] || response.data.length || 0),
+        totalPages: Number(response.headers["x-total-pages"] || 1),
+      },
+    };
   }
 );
 
@@ -179,6 +189,7 @@ const productSlice = createSlice({
     viewedProductIds: JSON.parse(localStorage.getItem("viewedProducts") || "[]"),
     loading: false,
     error: null,
+    pagination: { page: 1, limit: 12, total: 0, totalPages: 1 },
     filters: {
       category: "",
       size: "",
@@ -222,7 +233,8 @@ const productSlice = createSlice({
       })
       .addCase(fetchProductsByFilters.fulfilled, (state, action) => {
         state.loading = false;
-        state.products = Array.isArray(action.payload) ? action.payload : [];
+        state.products = Array.isArray(action.payload.products) ? action.payload.products : [];
+        state.pagination = action.payload.pagination || state.pagination;
       })
       .addCase(fetchProductsByFilters.rejected, (state, action) => {
         state.loading = false;
