@@ -491,6 +491,14 @@ const Home = () => {
               style={{ y: heroImageY, scale: heroImageScale }}
               fetchPriority="high"
               decoding="async"
+              onError={(event) => {
+                if (event.currentTarget.dataset.fallback !== "used") {
+                  event.currentTarget.dataset.fallback = "used";
+                  event.currentTarget.src = fallbackHeroImage;
+                } else {
+                  event.currentTarget.style.visibility = "hidden";
+                }
+              }}
             />
           ) : (
             <div className="home-hero-image-placeholder" />
@@ -567,6 +575,18 @@ const Home = () => {
                       alt={product.images[0].altText || product.name}
                       loading="lazy"
                       decoding="async"
+                      onError={(event) => {
+                        const nextImage = product.images[1]?.url;
+                        if (nextImage && nextImage !== event.currentTarget.src && !event.currentTarget.dataset.alternateTried) {
+                          event.currentTarget.dataset.alternateTried = "true";
+                          event.currentTarget.src = nextImage;
+                        } else if (!event.currentTarget.dataset.fallbackTried) {
+                          event.currentTarget.dataset.fallbackTried = "true";
+                          event.currentTarget.src = fallbackHeroImage;
+                        } else {
+                          event.currentTarget.style.visibility = "hidden";
+                        }
+                      }}
                     />
                     <span className="home-collection-wash" />
                     <span className="home-collection-copy">
