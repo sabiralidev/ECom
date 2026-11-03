@@ -18,7 +18,7 @@ const subscribe = async (req, res, next) => {
 
         res.status(201).json({ message: "Successfully Subscribed to the E-Commerce" });
     } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Server error" });
     }
 };
 

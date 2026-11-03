@@ -221,34 +221,19 @@ Expected health response:
 | `PORT` | No | HTTP port. Defaults to `5100`. | `5100` |
 | `HOST` | No | Bind host. Defaults to `localhost`. | `localhost` |
 | `MONGODB_URI` | Yes | MongoDB local or Atlas connection string. | `mongodb://127.0.0.1:27017/ecom` |
-| `JWT_SECRET` | Yes | Secret used to sign and verify seven-day JWTs. | Long random string |
-| `FRONTEND_URL` | No | Stripe success and cancel redirect origin. | `http://localhost:5173` |
+| `JWT_SECRET` | Yes | Secret used to sign and verify seven-day JWTs; at least 32 characters. | Long random string |
+| `FRONTEND_URL` | No | Stripe redirect origin and allowed CORS origin(s), comma-separated if needed. | `http://localhost:5173` |
 | `CLOUDINARY_CLOUD_NAME` | Uploads | Cloudinary cloud name. | `your_cloud_name` |
 | `CLOUDINARY_API_KEY` | Uploads | Cloudinary API key. | `your_api_key` |
 | `CLOUDINARY_API_SECRET` | Uploads | Cloudinary API secret. | `your_api_secret` |
 | `STRIPE_SECRET_KEY` | Stripe | Stripe server-side secret key. | `sk_test_...` |
 | `STRIPE_WEBHOOK_SECRET` | Webhooks | Stripe endpoint signing secret. | `whsec_...` |
 
-Safe backend template:
-
-```dotenv
-PORT=5100
-HOST=localhost
-MONGODB_URI=mongodb://127.0.0.1:27017/ecom
-JWT_SECRET=replace_with_a_long_random_secret
-FRONTEND_URL=http://localhost:5173
-CLOUDINARY_CLOUD_NAME=replace_with_cloudinary_cloud_name
-CLOUDINARY_API_KEY=replace_with_cloudinary_api_key
-CLOUDINARY_API_SECRET=replace_with_cloudinary_api_secret
-STRIPE_SECRET_KEY=sk_test_replace_with_stripe_secret_key
-STRIPE_WEBHOOK_SECRET=whsec_replace_with_stripe_webhook_secret
-```
+Copy [backend/.env.example](./backend/.env.example) to `backend/.env` and replace placeholders. Never commit real environment files.
 
 ### Frontend: `frontend/.env`
 
-```dotenv
-VITE_BACKEND_URL=http://localhost:5100
-```
+Copy [frontend/.env.example](./frontend/.env.example) to `frontend/.env`.
 
 Restart the Vite server after changing frontend environment variables.
 
@@ -582,11 +567,15 @@ Before deployment:
 - Generate a strong random `JWT_SECRET` and store it in a secret manager.
 - Add `.env` files to `.gitignore` and verify they are not tracked.
 - Use HTTPS for frontend, backend, Stripe redirects, and webhook endpoints.
-- Restrict CORS to the deployed frontend origin instead of allowing every origin.
+- CORS is restricted to `FRONTEND_URL` (development also permits localhost origins); keep it aligned with the deployed frontend.
+- Helmet security headers, request-body limits, Mongo query sanitization, and rate limits on authentication, newsletter, and customer checkout routes are enabled.
+- Register, login, profile update, newsletter, and checkout request bodies are schema-validated.
+- Uploads require an allowed image MIME type, a 5 MB maximum, and a matching image file signature.
 - Use Stripe live keys only in a protected server environment.
-- Configure Stripe webhook signature verification and test replay/idempotency behavior.
+- Keep Stripe webhook signature verification enabled; checkout finalization is guarded against duplicate order creation.
 - Change or remove the seed admin account.
-- Add rate limiting, request validation, structured error handling, and automated tests before production traffic.
+- Use a strong random `JWT_SECRET` (minimum 32 characters); the current access token remains in browser localStorage and lasts seven days.
+- The frontend production dependency audit is clean after upgrading Swiper to 14. Full frontend development dependencies still report moderate advisories; the backend audit reports two moderate advisories through `nodemon`/`minimatch`. Review these before deployment; do not force npm's proposed breaking `nodemon` downgrade.
 - Review admin authorization and ensure all admin mutations remain protected by both JWT and role checks.
 
 ## Contributing

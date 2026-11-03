@@ -15,7 +15,6 @@ const getAdminUsers = async (req, res, next) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while loading users",
-            error: error.message,
         });
     }
 };
@@ -45,11 +44,10 @@ const postAdminUsers = async (req, res, next) => {
         res.status(201).json({ message: "User created successfully", user: safeUser(user) });
     } catch (error) {
         if (error.name === "ValidationError" || error.code === 11000) {
-            return res.status(400).json({ message: error.code === 11000 ? "Email already in use" : error.message });
+            return res.status(400).json({ message: error.code === 11000 ? "Email already in use" : "User validation failed" });
         }
         return res.status(500).json({
             message: "Server error while creating user",
-            error: error.message,
         });
     }
 };
@@ -86,11 +84,10 @@ const adminUserUpdate = async (req, res, next) => {
         return res.status(200).json({ message: "User updated successfully", user: safeUser(updatedUser) });
     } catch (error) {
         if (error.name === "ValidationError" || error.code === 11000) {
-            return res.status(400).json({ message: error.code === 11000 ? "Email already in use" : error.message });
+            return res.status(400).json({ message: error.code === 11000 ? "Email already in use" : "User validation failed" });
         }
         return res.status(500).json({
             message: "Server error while updating user",
-            error: error.message,
         });
     }
 };
@@ -112,7 +109,6 @@ const adminDelUser = async (req, res, next) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while deleting user",
-            error: error.message,
         });
     }
 };
