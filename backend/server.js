@@ -35,6 +35,7 @@ const dbConnect = require("./config/dbConnect");
 // Cors Privacy Policy
 const corsOptions = {
   origin: "https://e-com-sabir-dev.vercel.app",  // Allow frontend's origin
+  // origin: "http://localhost:5173",  // Allow frontend's origin
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };
