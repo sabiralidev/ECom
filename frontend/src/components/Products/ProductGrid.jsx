@@ -20,7 +20,7 @@ const ProductSkeleton = () => (
     </div>
   </div>
 );
-const ProductGrid = ({ products, loading, error, onRetry, onWishlistToggle }) => {
+const ProductGrid = ({ products, loading, error, onClearFilters, onRetry, onWishlistToggle }) => {
   const dispatch = useDispatch();
   const [pendingWishlist, setPendingWishlist] = useState(null);
   const { user, guestWishlist, viewedProductIds } = useSelector((state) => state.auth ? { ...state.auth, ...state.product } : {});
@@ -63,7 +63,21 @@ const ProductGrid = ({ products, loading, error, onRetry, onWishlistToggle }) =>
       )}
     </div>
   );
-  if (!Array.isArray(products) || products.length === 0) return <div className="border border-[var(--line)] bg-[var(--surface)] p-16 text-center"><p className="display-title text-3xl">Nothing here yet.</p><p className="mt-3 text-sm text-[var(--ink-soft)]">Try adjusting your filters or search.</p></div>;
+  if (!Array.isArray(products) || products.length === 0) return (
+    <div className="border border-[var(--line)] bg-[var(--surface)] p-16 text-center">
+      <p className="display-title text-3xl">Nothing here yet.</p>
+      <p className="mt-3 text-sm text-[var(--ink-soft)]">Try adjusting your filters or search.</p>
+      {onClearFilters && (
+        <button
+          type="button"
+          onClick={onClearFilters}
+          className="mt-6 border border-[var(--line)] bg-[var(--surface-elevated)] px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[var(--ink-soft)] transition-colors hover:border-[var(--bronze)] hover:text-[var(--ink)]"
+        >
+          Clear filters
+        </button>
+      )}
+    </div>
+  );
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
       {products.map((product) => {
