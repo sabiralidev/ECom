@@ -95,8 +95,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--paper)] px-5 py-12 sm:px-8 lg:px-12">
-      <div className="mx-auto grid max-w-[1200px] gap-8 lg:grid-cols-3">
+    <div className="mx-auto min-h-screen w-[90%] bg-[var(--paper)] py-12">
+      <div className="mx-auto grid max-w-[1440px] gap-8 lg:grid-cols-3">
         <div className="premium-panel p-6">
           <p className="eyebrow mb-3">Account / Identity</p>
           <h2 className="display-title mb-5 text-4xl">Profile</h2>
@@ -181,9 +181,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <div className="premium-panel mx-auto mt-8 max-w-[1200px] p-6">
-        <p className="eyebrow mb-2">Account / Activity</p>
-        <h2 className="display-title mb-4 text-4xl">My orders</h2>
+      <div className="premium-panel mx-auto mt-8 max-w-[1440px] p-6">
         <MyOrderPages />
       </div>
     </div>
