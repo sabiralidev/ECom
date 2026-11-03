@@ -5,6 +5,7 @@ const Product = require("../models/products");
 const mongoose = require("mongoose");
 const { adjustInventory } = require("../utils/inventory");
 const { withMongoTransaction } = require("../utils/withMongoTransaction");
+const logger = require("../utils/logger");
 const Stripe = require("stripe");
 
 const defaultFrontendUrl = process.env.NODE_ENV === "production"
@@ -229,7 +230,7 @@ const checkoutPost = async (req, res, next) => {
             });
         }
 
-        console.log(`Checkout created for user : ${req.user._id}`);
+        logger.info({ event: "checkout_created" }, "checkout created");
         return res.status(201).json({
             checkout: newCheckout,
             order,

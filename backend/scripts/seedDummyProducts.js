@@ -8,6 +8,7 @@ dotenv.config({ path: path.join(__dirname, "..", ".env") });
 const dbConnect = require("../config/dbConnect");
 const Product = require("../models/products");
 const User = require("../models/user");
+const logger = require("../utils/logger");
 
 const seed = async () => {
   try {
@@ -35,11 +36,11 @@ const seed = async () => {
       );
     }
 
-    console.log(`Seed completed: ${products.length} products synced`);
+    logger.info({ productsSynced: products.length }, "seed completed");
     await mongoose.connection.close();
     process.exit(0);
   } catch (error) {
-    console.error("Seed failed:", error.message);
+    logger.error({ err: error }, "seed failed");
     await mongoose.connection.close();
     process.exit(1);
   }

@@ -3,6 +3,7 @@ const User = require("../models/user");
 const mongoose = require("mongoose");
 const Order = require("../models/order");
 const { parsePagination, paginateQuery } = require("../utils/pagination");
+const logger = require("../utils/logger");
 
 // Create Product Req
 const createProduct = async (req, res) => {
@@ -73,7 +74,7 @@ const createProduct = async (req, res) => {
         const createdProduct = await product.save();
         res.status(201).json(createdProduct);
     } catch (error) {
-        console.error("Error creating product:", error.message);
+        logger.error({ err: error }, "product creation failed");
         if (error.code === 11000) {
             return res.status(400).json({ message: "SKU already exists" });
         }
@@ -302,7 +303,7 @@ const productBestSeller = async (req, res, next) => {
         }
 
     } catch (error) {
-        console.log(error);
+        logger.error({ err: error }, "best seller lookup failed");
         res.status(500).json({ message: "Server error" });
     }
 }
@@ -318,7 +319,7 @@ const productNewArrivals = async (req, res, next) => {
 
         res.status(200).json(newArrivals);
     } catch (error) {
-        console.error(error);
+        logger.error({ err: error }, "new arrivals lookup failed");
         res.status(500).json({ message: "Server error" });
     }
 };
@@ -355,10 +356,9 @@ const productSimilar = async (req, res, next) => {
             isPublished: true,
         }).limit(4);
         res.status(200).json(similarProduct);
-        console.log(similarProduct.length)
 
     } catch (error) {
-        console.log(error);
+        logger.error({ err: error }, "similar products lookup failed");
         res.status(500).json({ message: "Server error" });
     }
 };

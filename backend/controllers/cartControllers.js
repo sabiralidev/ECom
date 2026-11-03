@@ -1,6 +1,7 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/products");
 const mongoose = require("mongoose");
+const logger = require("../utils/logger");
 
 const MAX_CART_ITEM_QTY = 10;
 
@@ -186,7 +187,7 @@ const postCart = async (req, res, next) => {
             return res.status(200).json(newCart);
         }
     } catch (error) {
-        console.error("Cart error:", error.message);
+        logger.error({ err: error }, "cart request failed");
         return res.status(500).json({
             message: "Server error while adding to cart",
         });
@@ -354,7 +355,7 @@ const cartMerge = async (req, res, next) => {
                     // ✅ Delete guest cart after merging
                     await Cart.findOneAndDelete({ guestId }); // ❗Fix here — use `Cart.findOneAndDelete`, not `userCart.findOneAndDelete`
                 } catch (error) {
-                    console.log("Error deleting guest cart: ", error);
+                    logger.warn({ err: error }, "guest cart cleanup failed after merge");
                 }
 
                 return res.status(200).json(userCart);

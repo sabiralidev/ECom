@@ -94,7 +94,7 @@ The frontend reads the backend origin from `VITE_BACKEND_URL`. The backend reads
 - Password hashing with `bcryptjs`
 - Stripe Checkout and webhook verification
 - Cloudinary and Multer for image uploads
-- CORS, Morgan, dotenv, and Nodemon
+- CORS, Pino structured logging, dotenv, and Nodemon
 
 ## Repository Structure
 
