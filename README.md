@@ -73,7 +73,7 @@ The project contains two independently runnable applications:
                                       carts/orders             upload storage          webhooks
 ```
 
-The frontend reads the backend origin from `VITE_BACKEND_URL` (configured to the deployed backend by default; override it for local development). The backend reads its runtime configuration from `backend/.env` using `dotenv`.
+The frontend reads the backend origin from `VITE_BACKEND_URL` (configured to `https://e-com-dlvd.vercel.app` by default; override it for local development). The backend reads its runtime configuration from Vercel environment variables in production or `backend/.env` locally. The Vercel backend entrypoint is `backend/api/index.js`; it reuses database connections, serves `/` and `/health` without requiring a database, and returns a descriptive service-unavailable response when API database initialization fails.
 
 ## Technology Stack
 
@@ -200,7 +200,7 @@ JWT_SECRET=replace_with_at_least_32_random_characters
 Create `frontend/.env`:
 
 ```dotenv
-VITE_BACKEND_URL=https://e-commerce-app-lilac-five.vercel.app
+VITE_BACKEND_URL=https://e-com-dlvd.vercel.app
 ```
 
 Vite exposes only variables prefixed with `VITE_` to browser code. Do not put MongoDB, JWT, Cloudinary secret, or Stripe secret values in the frontend environment file.
@@ -254,7 +254,7 @@ It returns HTTP `503` with `"status": "unavailable"` while MongoDB is disconnect
 | `STRIPE_SECRET_KEY` | Stripe | Stripe server-side secret key. | `sk_test_...` |
 | `STRIPE_WEBHOOK_SECRET` | Webhooks | Stripe endpoint signing secret. | `whsec_...` |
 
-Copy [backend/.env.example](./backend/.env.example) to `backend/.env` and replace placeholders. Never commit real environment files.
+Copy [backend/.env.example](./backend/.env.example) to `backend/.env` and replace placeholders. Never commit real environment files. For the Vercel backend project, set the backend variables in Vercel Project Settings and set its Root Directory to `backend`; `backend/vercel.json` routes all requests through the serverless Express entrypoint. Configure its `FRONTEND_URL` as `https://e-com-liart-beta.vercel.app,https://e-com-sabir-dev.vercel.app` and redeploy. The API function requires `MONGODB_URI` (a replica-set/Atlas URI), `JWT_SECRET` (at least 32 characters), and any credentials for enabled services.
 
 MongoDB transactions used by checkout and inventory operations require a replica set. For local MongoDB, start it with `--replSet rs0`, initialize it once with `rs.initiate()` in `mongosh`, and use the replica-set URI shown above. MongoDB Atlas connection strings provide replica-set support.
 The backend checks this capability during startup and exits with an explicit error if the database is standalone.
