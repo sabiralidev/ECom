@@ -6,6 +6,8 @@ import { toggleWishlistProduct, fetchRecommendations } from "../../redux/slices/
 import { setUserWishlist } from "../../redux/slices/authSlices";
 import { toast } from "sonner";
 
+const fallbackProductImage = "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=80";
+
 const ProductSkeleton = () => (
   <div className="animate-pulse"><div className="aspect-[3/4] bg-[#e6e0d7]" /><div className="mt-4 h-4 w-3/4 bg-[#e6e0d7]" /><div className="mt-2 h-3 w-1/3 bg-[#e6e0d7]" /></div>
 );
@@ -38,11 +40,35 @@ const ProductGrid = ({ products, loading, error, onWishlistToggle }) => {
         const isLiked = likedIds.includes(product._id) || likedIds.includes(product._id?.toString());
         const inStock = Number(product.countInStock || 0) > 0;
         return (
-          <article key={product._id} className="group">
+          <article key={product._id} className={`group catalogue-product-card ${secondImage?.url ? "has-alternate-image" : ""}`}>
             <div className="relative aspect-[3/4] overflow-hidden bg-[#e9e3da]">
               <Link to={`/product/${product._id}`} className="block h-full">
-                {firstImage?.url && <img src={firstImage.url} alt={firstImage.alt || product.name} loading="lazy" className={`absolute inset-0 h-full w-full object-cover transition duration-700 ${secondImage?.url ? "group-hover:opacity-0" : "group-hover:scale-[1.03]"}`} />}
-                {secondImage?.url && <img src={secondImage.url} alt={secondImage.alt || product.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-700 group-hover:scale-[1.03] group-hover:opacity-100" />}
+                <img
+                  src={firstImage?.url || fallbackProductImage}
+                  alt={firstImage?.altText || firstImage?.alt || product.name}
+                  loading="lazy"
+                  className="catalogue-product-image catalogue-product-image-primary absolute inset-0 h-full w-full object-cover transition duration-700"
+                  onError={(event) => {
+                    if (firstImage?.url && event.currentTarget.dataset.fallback !== "used" && event.currentTarget.src !== fallbackProductImage) {
+                      event.currentTarget.dataset.fallback = "used";
+                      event.currentTarget.src = fallbackProductImage;
+                    } else {
+                      event.currentTarget.style.visibility = "hidden";
+                    }
+                  }}
+                />
+                {secondImage?.url && (
+                  <img
+                    src={secondImage.url}
+                    alt={secondImage.altText || secondImage.alt || product.name}
+                    loading="lazy"
+                    className="catalogue-product-image catalogue-product-image-secondary absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
+                    onError={(event) => {
+                      event.currentTarget.style.visibility = "hidden";
+                      event.currentTarget.closest(".catalogue-product-card")?.setAttribute("data-alternate-image-failed", "true");
+                    }}
+                  />
+                )}
               </Link>
               {!inStock && <span className="absolute left-3 top-3 bg-[var(--surface)] px-2 py-1 text-[0.58rem] font-bold uppercase tracking-wider">Sold out</span>}
               {Number(product.discountPrice || 0) > 0 && <span className="absolute left-3 top-3 bg-[var(--ink)] px-2 py-1 text-[0.58rem] font-bold uppercase tracking-wider text-white">Sale</span>}
