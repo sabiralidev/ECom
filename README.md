@@ -44,6 +44,9 @@ The project contains two independently runnable applications:
 - Checkout with Cash on Delivery or Stripe
 - View order history, order details, payment status, and delivery status
 - Subscribe an email address to the store newsletter
+- Use a persisted light/dark theme, mobile quick navigation, and live product/category search suggestions
+- Browse the collection with shareable filters and server-side pagination
+- Track free-delivery progress in the cart drawer
 
 ### Admin experience
 
@@ -70,7 +73,7 @@ The project contains two independently runnable applications:
                                       carts/orders             upload storage          webhooks
 ```
 
-The frontend reads the backend origin from `VITE_BACKEND_URL`. The backend reads its runtime configuration from `backend/.env` using `dotenv`.
+The frontend reads the backend origin from `VITE_BACKEND_URL` (configured to the deployed backend by default; override it for local development). The backend reads its runtime configuration from `backend/.env` using `dotenv`.
 
 ## Technology Stack
 
@@ -95,6 +98,12 @@ The frontend reads the backend origin from `VITE_BACKEND_URL`. The backend reads
 - Stripe Checkout and webhook verification
 - Cloudinary and Multer for image uploads
 - CORS, Pino structured logging, dotenv, and Nodemon
+
+## E / C Studio design system
+
+The storefront uses a fashion-editorial atelier direction: warm paper, garment-dyed olive and clay accents, high-contrast serif headlines, and a quiet, tactile surface system. Cormorant Garamond is the display face and DM Sans is the body face. Global colors, radii, shadows, type scale, motion, and stacking layers are defined in `frontend/tailwind.config.js` and `frontend/src/index.css`.
+
+Reusable storefront primitives are exported from `frontend/src/components/ui/index.jsx` (buttons, form controls, badges, cards, accessible modal/drawer, tabs, accordions, skeletons, empty states, ratings, pagination, toast, breadcrumbs, price tags, and quantity stepper).
 
 ## Repository Structure
 
@@ -148,6 +157,19 @@ Cloudinary and Stripe are optional for basic product browsing and Cash on Delive
 
 ## Quick Start
 
+From the repository root, available convenience scripts are:
+
+```bash
+npm run dev       # Vite storefront
+npm run server    # Express API
+npm run build
+npm run lint
+npm test
+npm run seed
+```
+
+Run `npm run dev` and `npm run server` in separate terminals. The frontend/backend still install dependencies in their respective folders.
+
 ### 1. Install dependencies
 
 Open two terminals from the project root:
@@ -178,7 +200,7 @@ JWT_SECRET=replace_with_at_least_32_random_characters
 Create `frontend/.env`:
 
 ```dotenv
-VITE_BACKEND_URL=http://localhost:5100
+VITE_BACKEND_URL=https://e-commerce-app-lilac-five.vercel.app
 ```
 
 Vite exposes only variables prefixed with `VITE_` to browser code. Do not put MongoDB, JWT, Cloudinary secret, or Stripe secret values in the frontend environment file.
@@ -296,6 +318,7 @@ Send an image as multipart form data using the field name `image` to `/api/uploa
 | `/order-confirmation` | Authenticated | Latest order confirmation |
 | `/my-order` | Authenticated | Order history |
 | `/order/:id` | Authenticated | Order details |
+| Unknown customer route | Public | Branded not-found page |
 
 ### Admin routes
 
@@ -359,6 +382,8 @@ Protected endpoints require `Authorization: Bearer <token>`. Admin endpoints req
 Supported product query parameters include `collection`, `category`, `sizes`, `colors`, `gender`, `minPrice`, `maxPrice`, `sortBy`, `search`, `material`, `brand`, `page`, `limit`, `minRating`, and `availability`.
 
 The product catalogue, admin product/order/user lists, and current user's order history support opt-in pagination. Pass `page` and optional `limit` (default `25`, maximum `100`). Responses remain arrays; metadata is returned in `X-Total-Count`, `X-Page`, `X-Limit`, and `X-Total-Pages` headers. The product endpoint requires `page` to activate pagination; its existing `limit`-only behavior is unchanged. The CORS policy exposes these headers to the frontend.
+
+The storefront requests 12 products per collection page and reads the response headers for result count and pagination controls. Search suggestions use the existing published-products search endpoint; recent search terms remain in the browser only.
 
 Example:
 
@@ -487,7 +512,7 @@ The seed script reads `backend/data/dummy-clothing-products.json`, connects to M
 
 ```bash
 cd backend
-npm run seed:products
+npm run seed
 ```
 
 If an admin user does not exist, the script creates a local seed admin:
@@ -524,7 +549,7 @@ node --check config/dbConnect.js
 npm test
 ```
 
-The backend currently has no automated test suite. `npm test` is still the package placeholder and exits with an error until tests are added. For manual verification, start the backend and request:
+The backend test suite runs with Node's built-in test runner and covers auth/RBAC, inventory, checkout, health, pagination, request validation, and transaction support. For manual API verification, start the backend and request:
 
 ```bash
 curl http://localhost:5100/
@@ -544,7 +569,7 @@ Use Postman or the frontend to verify authenticated, cart, checkout, upload, and
 ### Frontend shows network errors
 
 - Start the backend on the port configured in `VITE_BACKEND_URL`.
-- Confirm `frontend/.env` uses the full origin, for example `http://localhost:5100`.
+- Confirm `frontend/.env` uses the full backend origin; local development can use `http://localhost:5100`.
 - Restart Vite after changing `.env`.
 - Check the browser Network panel for the exact failing endpoint.
 
