@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import FilterSidebar from "../components/Products/FilterSidebar";
 import SortOptions from "../components/Products/SortOptions";
@@ -18,21 +18,8 @@ const CollectionPage = () => {
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
-  const handleClickOutside = (e) => {
-    if(sidebarRef.current && !sidebarRef.current.contains(e.target)) {
-      setIsSidebarOpen(false);
-    }
-  };
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
+  const loadProducts = useCallback(() => {
     const params = Object.fromEntries([...searchParams]);
-
     dispatch(
       fetchProductsByFilters({
         collection: params.collection,
@@ -51,6 +38,21 @@ const CollectionPage = () => {
       })
     );
   }, [dispatch, searchParams]);
+  const handleClickOutside = (e) => {
+    if(sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+      setIsSidebarOpen(false);
+    }
+  };
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
   return (
     <div className="w-full px-3 py-6 sm:px-4 lg:px-0 lg:py-0">
       <div ref={sidebarRef} className="flex w-full flex-col gap-6 lg:flex-row lg:items-start">
@@ -84,7 +86,7 @@ const CollectionPage = () => {
           </div>
 
           <SortOptions />
-          <ProductGrid products={products} loading={loading} error={error} />
+          <ProductGrid products={products} loading={loading} error={error} onRetry={loadProducts} />
         </div>
       </div>
     </div>
