@@ -48,12 +48,13 @@ const allowedOrigins = new Set(
     .filter(Boolean)
 );
 allowedOrigins.add("https://e-com-liart-beta.vercel.app");
+allowedOrigins.add("https://e-com-sabir-dev.vercel.app");
 if (process.env.NODE_ENV !== "production") {
   allowedOrigins.add("http://localhost:5173");
   allowedOrigins.add("http://127.0.0.1:5173");
 }
 
-app.use(cors({
+const corsMiddleware = cors({
   origin(origin, callback) {
     if (!origin || allowedOrigins.has(origin)) {
       return callback(null, true);
@@ -67,7 +68,8 @@ app.use(cors({
   allowedHeaders: ["Authorization", "Content-Type", "Stripe-Signature"],
   exposedHeaders: ["X-Total-Count", "X-Page", "X-Limit", "X-Total-Pages"],
   credentials: true,
-}));
+});
+app.use(corsMiddleware);
 
 app.use(sanitizeRequest);
 
@@ -170,4 +172,4 @@ if (require.main === module) {
   startServer();
 }
 
-module.exports = { app, startServer };
+module.exports = { app, startServer, corsMiddleware };
