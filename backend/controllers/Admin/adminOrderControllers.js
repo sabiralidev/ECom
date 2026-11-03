@@ -11,7 +11,6 @@ const getAdminOrders = async (req, res, next) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while loading orders",
-            error: error.message,
         });
     };
 };
@@ -47,7 +46,6 @@ const getAdminDashboard = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while loading admin dashboard",
-            error: error.message,
         });
     }
 };
@@ -131,8 +129,9 @@ const ademinOrderUpdate = async (req, res, next) => {
         return res.status(200).json(updateOrder);
     } catch (error) {
         return res.status(error.statusCode || 500).json({
-            message: error.statusCode ? error.message : "Server error while updating order",
-            error: error.message,
+            message: error.statusCode && error.statusCode < 500
+                ? error.message
+                : "Server error while updating order",
         });
     };
 };
@@ -187,7 +186,6 @@ const adminDeleteOrder = async (req, res, next) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while deleting order",
-            error: error.message,
         });
     }
 };

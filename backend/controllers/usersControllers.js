@@ -93,7 +93,7 @@ const userProfile = async (req, res) => {
     try {
         res.status(200).json(req.user);
     } catch (error) {
-        res.status(500).json({ message: "Error fetching user profile", error: error.message });
+        res.status(500).json({ message: "Error fetching user profile" });
     }
 };
 
@@ -131,7 +131,7 @@ const updateUserProfile = async (req, res) => {
             viewedProducts: updated.viewedProducts || [],
         });
     } catch (error) {
-        return res.status(500).json({ message: "Error updating user profile", error: error.message });
+        return res.status(500).json({ message: "Error updating user profile" });
     }
 };
 
@@ -152,7 +152,7 @@ const deleteUserProfile = async (req, res) => {
 
         return res.status(200).json({ message: "Account deleted successfully" });
     } catch (error) {
-        return res.status(500).json({ message: "Error deleting account", error: error.message });
+        return res.status(500).json({ message: "Error deleting account" });
     }
 };
 

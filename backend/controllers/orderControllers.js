@@ -11,7 +11,6 @@ const getMyOrder = async (req,res,next)=>{
     } catch (error) {
          return res.status(500).json({
             message: "Server error while updating cart",
-            error: error.message,
         });
     }
 };
@@ -33,7 +32,6 @@ const getOrderDetails = async (req, res, next)=>{
     } catch (error) {
          return res.status(500).json({
             message: "Server error while updating cart",
-            error: error.message,
         });
     }
 };

@@ -135,6 +135,69 @@ test("partial multi-product deduction rolls back prior stock changes", async () 
   assert.equal(stock.get(secondId).count, 0);
 });
 
+test("concurrent deductions never reduce stock below zero", async () => {
+  const id = new mongoose.Types.ObjectId().toString();
+  let stock = 5;
+  Product.updateOne = async (filter, update) => {
+    await new Promise((resolve) => setImmediate(resolve));
+    const requiredStock = filter.countInStock?.$gte;
+    if (requiredStock !== undefined && stock < requiredStock) {
+      return { matchedCount: 0 };
+    }
+    stock += update.$inc.countInStock;
+    return { matchedCount: 1 };
+  };
+
+  const outcomes = await Promise.all(Array.from({ length: 10 }, async () => {
+    try {
+      await adjustInventory([{ productId: id, quantity: 1 }], -1);
+      return "reserved";
+    } catch (error) {
+      assert.equal(error.statusCode, 409);
+      return "rejected";
+    }
+  }));
+
+  assert.equal(outcomes.filter((result) => result === "reserved").length, 5);
+  assert.equal(outcomes.filter((result) => result === "rejected").length, 5);
+  assert.equal(stock, 0);
+});
+
+test("incomplete inventory rollback attempts every applied product and reports server failure", async () => {
+  const firstId = new mongoose.Types.ObjectId().toString();
+  const secondId = new mongoose.Types.ObjectId().toString();
+  const unavailableId = new mongoose.Types.ObjectId().toString();
+  const calls = [];
+  Product.updateOne = async (filter, update) => {
+    const productId = String(filter._id);
+    const adjustment = update.$inc.countInStock;
+    calls.push({ productId, adjustment });
+    if (productId === unavailableId || (productId === secondId && adjustment > 0)) {
+      return { matchedCount: 0 };
+    }
+    return { matchedCount: 1 };
+  };
+
+  await assert.rejects(
+    adjustInventory([
+      { productId: firstId, quantity: 1 },
+      { productId: secondId, quantity: 1 },
+      { productId: unavailableId, quantity: 1 },
+    ], -1),
+    {
+      statusCode: 500,
+      message: "Inventory adjustment failed and stock rollback was incomplete",
+    }
+  );
+  assert.deepEqual(calls, [
+    { productId: firstId, adjustment: -1 },
+    { productId: secondId, adjustment: -1 },
+    { productId: unavailableId, adjustment: -1 },
+    { productId: secondId, adjustment: 1 },
+    { productId: firstId, adjustment: 1 },
+  ]);
+});
+
 test("COD checkout uses server product prices and deducts live inventory", async () => {
   const productId = new mongoose.Types.ObjectId().toString();
   const userId = new mongoose.Types.ObjectId();

@@ -82,7 +82,7 @@ const createProduct = async (req, res) => {
                 .status(400)
                 .json({ message: "Validation failed", errors: messages });
         }
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Server error" });
     }
 };
 // Update Product Req
@@ -148,9 +148,9 @@ const updateProduct = async (req, res, next) => {
         }
     } catch (error) {
         if (error.name === "ValidationError" || error.code === 11000) {
-            return res.status(400).json({ message: error.code === 11000 ? "SKU already exists" : error.message });
+            return res.status(400).json({ message: error.code === 11000 ? "SKU already exists" : "Product validation failed" });
         }
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Server error" });
     }
 };
 // Delete Product Req
@@ -167,7 +167,7 @@ const deleteProduct = async (req, res, next) => {
             res.status(404).json({ message: "Product Not Found" });
         }
     } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Server error" });
     }
 };
 
@@ -271,7 +271,7 @@ const getAllProducts = async (req, res, next) => {
 
         res.status(200).json(products);
     } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Server error" });
     }
 };
 
@@ -288,7 +288,7 @@ const productBestSeller = async (req, res, next) => {
 
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Server error" });
     }
 }
 
@@ -304,7 +304,7 @@ const productNewArrivals = async (req, res, next) => {
         res.status(200).json(newArrivals);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Server error" });
     }
 };
 
@@ -321,7 +321,7 @@ const getProduct = async (req, res, next) => {
             res.status(404).json({ message: "Product Not Found" });
         }
     } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Server error" });
     }
 };
 
@@ -344,7 +344,7 @@ const productSimilar = async (req, res, next) => {
 
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Server error" });
     }
 };
 
@@ -377,7 +377,7 @@ const trackProductView = async (req, res) => {
 
         return res.status(200).json({ message: "View tracked" });
     } catch (error) {
-        return res.status(500).json({ message: "Server error", error: error.message });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 
@@ -412,7 +412,7 @@ const toggleWishlistProduct = async (req, res) => {
             wishlist: user.wishlist,
         });
     } catch (error) {
-        return res.status(500).json({ message: "Server error", error: error.message });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 
@@ -469,7 +469,7 @@ const getRecommendations = async (req, res) => {
 
         return res.status(200).json(recommendations);
     } catch (error) {
-        return res.status(500).json({ message: "Server error", error: error.message });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 
@@ -513,7 +513,7 @@ const rateProduct = async (req, res) => {
             ratingCount: product.ratingCount,
         });
     } catch (error) {
-        return res.status(500).json({ message: "Server error", error: error.message });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 module.exports = {

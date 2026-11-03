@@ -6,7 +6,13 @@ const mongoose = require("mongoose");
 const { adjustInventory } = require("../utils/inventory");
 const Stripe = require("stripe");
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const defaultFrontendUrl = process.env.NODE_ENV === "production"
+    ? "https://e-com-sabir-dev.vercel.app"
+    : "http://localhost:5173";
+const FRONTEND_URL = (process.env.FRONTEND_URL || defaultFrontendUrl)
+    .split(",")[0]
+    .trim()
+    .replace(/\/$/, "");
 
 const ensureStripeConfigured = () => {
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -274,8 +280,9 @@ const checkoutPost = async (req, res, next) => {
         });
     } catch (error) {
         return res.status(error.statusCode || 500).json({
-            message: error.statusCode ? error.message : "Server error while creating checkout",
-            error: error.message,
+            message: error.statusCode && error.statusCode < 500
+                ? error.message
+                : "Server error while creating checkout",
         });
     }
 };
@@ -392,7 +399,6 @@ const createStripeCheckoutSession = async (req, res) => {
     } catch (error) {
         return res.status(error.statusCode || 500).json({
             message: "Server error while creating Stripe session",
-            error: error.message,
         });
     }
 };
@@ -459,7 +465,6 @@ const verifyStripeSession = async (req, res) => {
     } catch (error) {
         return res.status(error.statusCode || 500).json({
             message: "Server error while verifying Stripe payment",
-            error: error.message,
         });
     }
 };
@@ -485,7 +490,6 @@ const checkoutStatus = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while fetching checkout status",
-            error: error.message,
         });
     }
 };
@@ -563,7 +567,6 @@ const checkoutWebhook = async (req, res) => {
         const statusCode = error.type === "StripeSignatureVerificationError" ? 400 : error.statusCode || 500;
         return res.status(statusCode).json({
             message: "Webhook Error",
-            error: error.message,
         });
     }
 };
@@ -625,7 +628,6 @@ const checkoutFinalize = async (req, res, next) => {
     } catch (error) {
         return res.status(error.statusCode || 500).json({
             message: "Server error while updating cart",
-            error: error.message,
         });
     }
 };

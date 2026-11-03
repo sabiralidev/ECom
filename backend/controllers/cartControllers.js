@@ -189,7 +189,6 @@ const postCart = async (req, res, next) => {
         console.error("Cart error:", error.message);
         return res.status(500).json({
             message: "Server error while adding to cart",
-            error: error.message,
         });
     }
 };
@@ -249,7 +248,6 @@ const updateCartQuantity = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while updating cart",
-            error: error.message,
         });
     }
 };
@@ -286,7 +284,6 @@ const deleteCart = async (req, res, next) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while updating cart",
-            error: error.message,
         });
     }
 };
@@ -310,7 +307,6 @@ const getCarts = async (req, res, next) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while updating cart",
-            error: error.message,
         });
     }
 };
@@ -384,7 +380,6 @@ const cartMerge = async (req, res, next) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while updating cart",
-            error: error.message,
         });
     }
 };

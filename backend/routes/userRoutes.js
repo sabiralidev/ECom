@@ -7,6 +7,13 @@ const {
     deleteUserProfile,
 } = require("../controllers/usersControllers");
 const {auth} = require("../Middleware/authMiddleware");
+const { authLimiter } = require("../Middleware/requestLimits");
+const {
+    loginSchema,
+    profileUpdateSchema,
+    registerSchema,
+    validateRequest,
+} = require("../Middleware/requestValidation");
 
 const router = express.Router();
 
@@ -14,10 +21,10 @@ const router = express.Router();
 // @des Register a new user
 // @access public
 
-router.post("/register", register)
-router.post("/login", login)
+router.post("/register", authLimiter, validateRequest(registerSchema), register)
+router.post("/login", authLimiter, validateRequest(loginSchema), login)
 router.get("/profile",auth, userProfile)
-router.put("/profile", auth, updateUserProfile)
+router.put("/profile", auth, validateRequest(profileUpdateSchema), updateUserProfile)
 router.delete("/profile", auth, deleteUserProfile)
 
 module.exports = router;

@@ -52,20 +52,29 @@ const adjustInventory = async (items, direction) => {
             applied.push(adjustment);
         }
     } catch (error) {
+        const rollbackFailures = [];
         for (const adjustment of applied.reverse()) {
             try {
-                await Product.updateOne(
+                const rollbackResult = await Product.updateOne(
                     { _id: adjustment.productId },
                     { $inc: { countInStock: -direction * adjustment.quantity } }
                 );
+                if (rollbackResult.matchedCount !== 1) {
+                    rollbackFailures.push(adjustment.productId);
+                }
             } catch (rollbackError) {
-                const failure = new Error(
-                    `Inventory adjustment failed and stock rollback also failed: ${rollbackError.message}`
-                );
-                failure.statusCode = 500;
-                throw failure;
+                rollbackFailures.push({ productId: adjustment.productId, error: rollbackError });
             }
         }
+
+        if (rollbackFailures.length) {
+            console.error("Inventory adjustment rollback was incomplete", {
+                error,
+                rollbackFailures,
+            });
+            throw inventoryError("Inventory adjustment failed and stock rollback was incomplete", 500);
+        }
+
         throw error;
     }
 };

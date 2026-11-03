@@ -36,13 +36,13 @@ Requirements: Node.js 18+, MongoDB, and npm.
    npm install
    ```
 
-2. Configure `backend/.env`. The file in this project contains the required variable names and safe placeholders:
+2. Configure `backend/.env`. Copy `.env.example` to `.env` and replace the placeholders:
 
    ```dotenv
    PORT=5100
    HOST=localhost
    MONGODB_URI=mongodb://127.0.0.1:27017/ecom
-   JWT_SECRET=replace_with_a_long_random_secret
+   JWT_SECRET=replace_with_at_least_32_random_characters
    FRONTEND_URL=http://localhost:5173
    CLOUDINARY_CLOUD_NAME=replace_with_cloudinary_cloud_name
    CLOUDINARY_API_KEY=replace_with_cloudinary_api_key
@@ -52,6 +52,8 @@ Requirements: Node.js 18+, MongoDB, and npm.
    ```
 
    `MONGODB_URI` and `JWT_SECRET` are required for the API. Cloudinary variables are required by image upload, and Stripe variables are required only when using Stripe payments. Keep real secrets out of Git.
+
+   `FRONTEND_URL` also controls the allowed production CORS origin. In development, localhost Vite origins are allowed.
 
 3. Start the development server:
 

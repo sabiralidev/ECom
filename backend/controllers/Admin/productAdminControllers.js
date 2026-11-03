@@ -10,7 +10,6 @@ const getAdminProducts = async (req, res, next) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while loading products",
-            error: error.message,
         });
     }
 };
@@ -28,7 +27,6 @@ const getAdminProduct = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             message: "Server error while loading product",
-            error: error.message,
         });
     }
 };
