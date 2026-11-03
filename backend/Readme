@@ -126,6 +126,15 @@ All admin routes require a JWT and `role: "admin"`.
 | GET/PUT/DELETE | `/auth/admin/orders`, `/auth/admin/order-update/:id`, `/auth/admin/order-delete/:id` | Manage orders. Order status can be `Processing`, `Shipped`, `Delivered`, or `Cancelled`. |
 | POST | `/api/upload` | Upload an image as multipart form field `image` (JPEG, PNG, WebP, or GIF; max 5 MB); returns a Cloudinary URL. |
 
+## Response conventions for new endpoints
+
+Existing endpoints keep their current response shapes for compatibility. New endpoints should use the helpers in `utils/apiResponse.js`:
+
+- Success: `{ "data": <payload> }`, with the HTTP status reflecting the result.
+- Error: `{ "message": "<description>", "code": "<stable machine-readable code>" }`.
+
+This convention is not applied retroactively to existing routes.
+
 ## Database Schema
 
 MongoDB collections are created by Mongoose:
