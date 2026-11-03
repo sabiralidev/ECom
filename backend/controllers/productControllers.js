@@ -2,6 +2,7 @@ const Product = require("../models/products");
 const User = require("../models/user");
 const mongoose = require("mongoose");
 const Order = require("../models/order");
+const { parsePagination, paginateQuery } = require("../utils/pagination");
 
 // Create Product Req
 const createProduct = async (req, res) => {
@@ -191,6 +192,11 @@ const getAllProducts = async (req, res, next) => {
             availability,
         } = req.query;
 
+        const pagination = req.query.page === undefined ? null : parsePagination(req.query);
+        if (pagination?.error) {
+            return res.status(400).json({ message: pagination.error });
+        }
+
         let query = {};
         let sort = {};
 
@@ -265,11 +271,20 @@ const getAllProducts = async (req, res, next) => {
         }
 
         query.isPublished = true;
-        const products = await Product.find(query)
-            .sort(sort)
-            .limit(Number(limit) || 0);
+        const productQuery = Product.find(query).sort(sort);
+        if (pagination) {
+            const products = await paginateQuery({
+                model: Product,
+                filter: query,
+                query: productQuery,
+                pagination,
+                res,
+            });
+            return res.status(200).json(products);
+        }
 
-        res.status(200).json(products);
+        const products = await productQuery.limit(Number(limit) || 0);
+        return res.status(200).json(products);
     } catch (error) {
         res.status(500).json({ message: "Server error" });
     }

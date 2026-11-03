@@ -3,12 +3,22 @@ const Product = require("../../models/products");
 const User = require("../../models/user");
 const { adjustInventory } = require("../../utils/inventory");
 const { withMongoTransaction } = require("../../utils/withMongoTransaction");
+const { parsePagination, paginateQuery } = require("../../utils/pagination");
 
 // Get Admin Order /auth/admin/orders
 const getAdminOrders = async (req, res, next) => {
+    const pagination = parsePagination(req.query);
+    if (pagination?.error) {
+        return res.status(400).json({ message: pagination.error });
+    }
+
     try {
-        const order = await Order.find({}).populate("user", "name email").sort({ createdAt: -1 });
-        res.status(200).json(order);
+        const filter = {};
+        const orderQuery = Order.find(filter).populate("user", "name email").sort({ createdAt: -1 });
+        const orders = pagination
+            ? await paginateQuery({ model: Order, filter, query: orderQuery, pagination, res })
+            : await orderQuery;
+        return res.status(200).json(orders);
     } catch (error) {
         return res.status(500).json({
             message: "Server error while loading orders",
