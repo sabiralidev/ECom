@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUp, ArrowUpRight } from "lucide-react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -121,9 +121,13 @@ const Footer = ({ showNewsletter = true }) => {
           <Link to="/my-order">Your orders <ArrowUpRight size={13} /></Link>
           <Link to="/login">Get in touch <ArrowUpRight size={13} /></Link>
         </div>
-        <Link to="/collections" className="store-footer-backtop">
-          Find your everyday <ArrowRight size={16} />
-        </Link>
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })}
+          className="store-footer-backtop"
+        >
+          Back to top <ArrowUp size={16} />
+        </button>
       </div>
 
       <div className="content-shell store-footer-bottom">
