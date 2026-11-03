@@ -3,24 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --ink: #17181a;
-  --ink-soft: #696962;
-  --paper: #f2eee7;
-  --surface: #f8f5f0;
-  --surface-elevated: #fffdf9;
-  --graphite: #0b0b0c;
-  --graphite-soft: #17181a;
-  --line: #d7d0c3;
-  --bronze: #b17d4d;
-  --bronze-deep: #76542f;
+  color-scheme: light;
+  --ink: #201d19;
+  --ink-soft: #746c60;
+  --paper: #f3eee5;
+  --surface: #f8f5ef;
+  --surface-elevated: #fffdf8;
+  --graphite: #191a17;
+  --graphite-soft: #242521;
+  --line: #d8cebf;
+  --bronze: #a76d48;
+  --bronze-deep: #75472f;
   --success: #426b56;
-  --warning: #a87532;
+  --warning: #94632c;
   --error: #a34f43;
-  --shadow: 0 18px 60px rgba(23, 24, 26, 0.12);
-  --radius-sm: 2px;
-  --radius-md: 6px;
-  --display: "Manrope", "Helvetica Neue", sans-serif;
-  --sans: "Manrope", "Helvetica Neue", sans-serif;
+  --shadow: 0 18px 60px rgba(32, 29, 25, 0.12);
+  --radius-sm: 3px;
+  --radius-md: 8px;
+  --display: "Cormorant Garamond", Georgia, serif;
+  --sans: "DM Sans", "Helvetica Neue", sans-serif;
+  --gradient-editorial: linear-gradient(135deg, #eee4d5 0%, #f7f3eb 52%, #dcd5c7 100%);
+  --layer-header: 50;
+  --layer-overlay: 90;
+  --layer-drawer: 100;
+  --layer-toast: 120;
+  --space-section: clamp(3rem, 7vw, 7rem);
   --ease-standard: cubic-bezier(0.2, 0.75, 0.25, 1);
   --motion-micro: 180ms;
   --motion-standard: 320ms;
@@ -105,7 +112,7 @@ a:focus-visible {
 
 .sort-select option:checked,
 .sort-select option:hover {
-  background: rgba(122, 151, 194, 0.18);
+  background: rgba(167, 109, 72, 0.18);
   color: var(--ink);
 }
 
