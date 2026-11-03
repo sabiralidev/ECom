@@ -1,17 +1,31 @@
 // Imports Packages Which Use in BackEnd Application
 const express = require("express");
 const cors = require("cors");
-const morgan = require("morgan");
 const helmet = require("helmet");
 const mongoose = require("mongoose");
 const path = require("path");
 const dotenv = require("dotenv");
 const { sanitizeRequest } = require("./Middleware/sanitizeRequest");
 const { assertTransactionSupport } = require("./config/assertTransactionSupport");
+const logger = require("./utils/logger");
 
 dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 const app = express();
+
+app.use((req, res, next) => {
+  const startedAt = process.hrtime.bigint();
+  res.once("finish", () => {
+    const responseTimeMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+    logger.info({
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      responseTimeMs: Math.round(responseTimeMs * 100) / 100,
+    }, "request completed");
+  });
+  next();
+});
 
 app.use(helmet());
 
@@ -24,8 +38,6 @@ app.use((req, res, next) => {
   }
   return express.json({ limit: "100kb" })(req, res, next);
 });
-app.use(morgan("dev"));
-
 const defaultFrontendOrigin = process.env.NODE_ENV === "production"
   ? "https://e-com-sabir-dev.vercel.app"
   : "http://localhost:5173";
@@ -124,7 +136,7 @@ app.use((error, req, res, next) => {
           : "Request could not be completed";
 
   if (statusCode >= 500) {
-    console.error("Unhandled request error:", error);
+    logger.error({ err: error, method: req.method, path: req.path }, "request failed");
   }
 
   return res.status(statusCode).json({ message });
@@ -140,14 +152,14 @@ const startServer = async () => {
     const connection = await dbConnect();
     await assertTransactionSupport(connection);
     app.listen(port, host, () => {
-      console.log(`Server is running at http://${host}:${port}`);
+      logger.info({ host, port }, "server listening");
     });
   } catch (error) {
-    console.error("Server startup failed:", error.message);
+    logger.error({ err: error }, "server startup failed");
     try {
       await mongoose.disconnect();
     } catch (disconnectError) {
-      console.error("Database cleanup after startup failure failed:", disconnectError.message);
+      logger.error({ err: disconnectError }, "database cleanup after startup failure failed");
     }
     process.exitCode = 1;
   }

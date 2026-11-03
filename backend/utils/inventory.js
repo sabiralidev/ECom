@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Product = require("../models/products");
+const logger = require("./logger");
 
 const inventoryError = (message, statusCode = 409) => {
     const error = new Error(message);
@@ -75,10 +76,10 @@ const adjustInventory = async (items, direction, { session } = {}) => {
         }
 
         if (rollbackFailures.length) {
-            console.error("Inventory adjustment rollback was incomplete", {
-                error,
+            logger.error({
+                err: error,
                 rollbackFailures,
-            });
+            }, "inventory adjustment rollback was incomplete");
             throw inventoryError("Inventory adjustment failed and stock rollback was incomplete", 500);
         }
 

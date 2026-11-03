@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const logger = require("../utils/logger");
 
 const dotenv = require('dotenv');
 dotenv.config();
@@ -9,10 +10,10 @@ const dbConnect = async () => {
             throw new Error("MONGODB_URI is required");
         }
         await mongoose.connect(process.env.MONGODB_URI);
-        console.log("Database server connected");
+        logger.info("database connected");
         return mongoose.connection;
     } catch (error) {
-        console.error("Database connection failed:", error.message);
+        logger.error({ err: error }, "database connection failed");
         throw error;
     }
 };

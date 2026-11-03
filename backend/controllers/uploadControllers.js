@@ -1,6 +1,7 @@
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
+const logger = require("../utils/logger");
 
 // Cloudinary Configuration
 cloudinary.config({
@@ -58,7 +59,7 @@ const adminImageUpload = (req, res, next) => {
       if (error.statusCode === 400) {
         return res.status(400).json({ message: error.message });
       }
-      console.error("Image upload request failed:", error);
+      logger.warn({ err: error }, "image upload request rejected");
       return res.status(400).json({ message: "Image upload request was rejected" });
     }
     if (req.file && !hasValidImageSignature(req.file)) {
@@ -95,7 +96,7 @@ const uploads = async (req, res) => {
     const result = await streamUpload(req.file.buffer);
     return res.status(201).json({ imageUrl: result.secure_url });
   } catch (error) {
-    console.error("Image upload failed:", error);
+    logger.error({ err: error }, "image upload failed");
     return res.status(500).json({
       message: "Server error while uploading image",
     });

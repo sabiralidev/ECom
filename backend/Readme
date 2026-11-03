@@ -9,7 +9,7 @@ REST API for the ECom clothing store. It handles user accounts, product browsing
 - JWT authentication and bcryptjs password hashing
 - Stripe Checkout and webhooks
 - Cloudinary image storage
-- Multer, CORS, Morgan, and dotenv
+- Multer, CORS, Pino, and dotenv
 
 ## Folder Structure
 
@@ -147,6 +147,8 @@ npm test
 ```
 
 The current suite covers bearer-token/admin-role checks and inventory reservation, rollback, COD checkout pricing, and order-cancellation behavior. Exercise MongoDB, Stripe, and Cloudinary integrations with their configured services before deployment.
+
+The API writes structured JSON logs to stdout. Request logs include the HTTP method, URL path (not query parameters), status code, and response time; request bodies, authorization headers, and cookies are not logged. Set log collection and retention in the hosting environment.
 
 ## Common Issues
 
