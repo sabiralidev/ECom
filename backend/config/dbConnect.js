@@ -6,6 +6,9 @@ dotenv.config();
 
 const dbConnect = async () => {
     try {
+        if (mongoose.connection.readyState === 1) {
+            return mongoose.connection;
+        }
         if (!process.env.MONGODB_URI) {
             throw new Error("MONGODB_URI is required");
         }
