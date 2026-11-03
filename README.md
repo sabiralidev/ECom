@@ -247,7 +247,7 @@ It returns HTTP `503` with `"status": "unavailable"` while MongoDB is disconnect
 | `HOST` | No | Bind host. Defaults to `localhost`. | `localhost` |
 | `MONGODB_URI` | Yes | MongoDB replica-set or Atlas connection string (transactions require replica-set support). | `mongodb://127.0.0.1:27017/ecom?replicaSet=rs0` |
 | `JWT_SECRET` | Yes | Secret used to sign and verify seven-day JWTs; at least 32 characters. | Long random string |
-| `FRONTEND_URL` | No | Stripe redirect origin and allowed CORS origin(s), comma-separated if needed. | `http://localhost:5173` |
+| `FRONTEND_URL` | No | Stripe redirect origin and allowed CORS origin(s), comma-separated if needed. | `http://localhost:5173,https://e-com-liart-beta.vercel.app` |
 | `CLOUDINARY_CLOUD_NAME` | Uploads | Cloudinary cloud name. | `your_cloud_name` |
 | `CLOUDINARY_API_KEY` | Uploads | Cloudinary API key. | `your_api_key` |
 | `CLOUDINARY_API_SECRET` | Uploads | Cloudinary API secret. | `your_api_secret` |
