@@ -39,7 +39,7 @@ app.use((req, res, next) => {
   return express.json({ limit: "100kb" })(req, res, next);
 });
 const defaultFrontendOrigin = process.env.NODE_ENV === "production"
-  ? "https://e-com-sabir-dev.vercel.app"
+  ? "https://e-com-liart-beta.vercel.app"
   : "http://localhost:5173";
 const allowedOrigins = new Set(
   (process.env.FRONTEND_URL || defaultFrontendOrigin)
@@ -47,6 +47,7 @@ const allowedOrigins = new Set(
     .map((origin) => origin.trim())
     .filter(Boolean)
 );
+allowedOrigins.add("https://e-com-liart-beta.vercel.app");
 if (process.env.NODE_ENV !== "production") {
   allowedOrigins.add("http://localhost:5173");
   allowedOrigins.add("http://127.0.0.1:5173");
