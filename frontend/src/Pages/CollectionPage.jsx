@@ -6,6 +6,7 @@ import ProductGrid from "../components/Products/ProductGrid";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { fetchProductsByFilters } from "../redux/slices/ProductSlice";
+import { Pagination } from "../components/ui";
 
 const catalogueFilterKeys = [
   "collection",
@@ -25,7 +26,7 @@ const catalogueFilterKeys = [
 const CollectionPage = () => {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { products, loading, error } = useSelector((state) => state.product);
+  const { products, loading, error, pagination } = useSelector((state) => state.product);
   const sidebarRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const activeFilterCount = catalogueFilterKeys.filter((key) => searchParams.get(key)).length;
@@ -55,6 +56,8 @@ const CollectionPage = () => {
         availability: params.availability,
         sortBy: params.sortBy,
         search: params.search,
+        page: params.page || 1,
+        limit: 12,
       })
     );
   }, [dispatch, searchParams]);
@@ -62,6 +65,11 @@ const CollectionPage = () => {
     if(sidebarRef.current && !sidebarRef.current.contains(e.target)) {
       setIsSidebarOpen(false);
     }
+  };
+  const changePage = (page) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("page", String(page));
+    setSearchParams(next);
   };
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
@@ -90,9 +98,10 @@ const CollectionPage = () => {
         <div className="lg:sticky lg:top-0 lg:w-[17.5rem] lg:shrink-0 lg:self-start">
           <FilterSidebar
             ref={sidebarRef}
+            onClose={() => setIsSidebarOpen(false)}
             className={`${
               isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-            } fixed inset-y-0 left-0 z-50 w-[min(88vw,22rem)] overflow-y-auto bg-[var(--surface)] transition-transform duration-300 lg:static lg:z-auto lg:w-full lg:translate-x-0`}
+            } fixed inset-y-0 left-0 z-50 w-full overflow-y-auto bg-[var(--surface)] transition-transform duration-300 lg:static lg:z-auto lg:w-full lg:translate-x-0`}
           />
         </div>
 
@@ -106,6 +115,11 @@ const CollectionPage = () => {
           </div>
 
           <SortOptions />
+          {!loading && !error && (
+            <p className="mb-4 text-sm text-[var(--ink-soft)]" aria-live="polite">
+              {pagination.total.toLocaleString()} {pagination.total === 1 ? "piece" : "pieces"} in this edit
+            </p>
+          )}
           <ProductGrid
             products={products}
             loading={loading}
@@ -113,6 +127,7 @@ const CollectionPage = () => {
             onRetry={loadProducts}
             onClearFilters={activeFilterCount > 0 ? clearCatalogueFilters : undefined}
           />
+          {!loading && !error && <Pagination page={pagination.page} pages={pagination.totalPages} onChange={changePage} className="mt-10 mb-12" />}
         </div>
       </div>
     </div>
